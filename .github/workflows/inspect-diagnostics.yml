@@ -1,0 +1,85 @@
+name: Inspect recovery diagnostics
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Recovery build run ID"
+        required: true
+        type: string
+      artifact_name:
+        description: "Exact diagnostic artifact name (empty selects latest failure logs)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Read diagnostics on the runner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_RUN_ID: ${{ inputs.run_id }}
+          TARGET_ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          python3 - <<'PY'
+          import io
+          import json
+          import os
+          import re
+          import subprocess
+          import zipfile
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          run_id = os.environ["TARGET_RUN_ID"]
+          assert run_id.isdigit(), "Run ID must be numeric"
+          prefix = "repos/" + repository + "/"
+          def api(path):
+              return subprocess.check_output(["gh", "api", prefix + path])
+          def clean(text):
+              text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
+              for name in ("GH_TOKEN", "GITHUB_TOKEN"):
+                  value = os.environ.get(name)
+                  if value:
+                      text = text.replace(value, "[REDACTED]")
+              text = re.sub(r"(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})", "[REDACTED]", text)
+              return text
+          def notice(title, text):
+              text = clean(text)
+              escaped = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print("::notice title=" + title + "::" + escaped, flush=True)
+
+          listing = json.loads(api("actions/runs/" + run_id + "/artifacts?per_page=100"))
+          artifacts = [item for item in listing["artifacts"] if not item["expired"]]
+          requested = os.environ.get("TARGET_ARTIFACT_NAME", "")
+          if requested:
+              selected = [item for item in artifacts if item["name"] == requested]
+          else:
+              selected = [item for item in artifacts if "diagnostics" in item["name"] or "build-logs" in item["name"]]
+          assert selected, "No matching diagnostic artifact exists yet"
+          artifact = max(selected, key=lambda item: (item["created_at"], item["id"]))
+          assert artifact["size_in_bytes"] < 64 * 1024 * 1024, "Diagnostic archive is too large"
+          archive = zipfile.ZipFile(io.BytesIO(api("actions/artifacts/" + str(artifact["id"]) + "/zip")))
+          notice("Diagnostic artifact", artifact["name"] + " from run " + run_id)
+          names = sorted(name for name in archive.namelist() if name.endswith(".log"))
+          names.sort(key=lambda name: ("build.log" not in name, name))
+          for name in names[:8]:
+              entry = archive.getinfo(name)
+              assert entry.file_size < 128 * 1024 * 1024, "Log is too large"
+              text = archive.read(name).decode("utf-8", "replace")
+              lines = text.splitlines()
+              matches = [index for index, line in enumerate(lines)
+                         if re.search(r"FAILED:|error:|fatal:|ninja: (?:error|build stopped)|Stopping the build|Killed|AssertionError|Traceback|No space left|out of memory", line, re.I)]
+              chosen = set()
+              for index in matches[-12:]:
+                  chosen.update(range(max(0, index - 3), min(len(lines), index + 10)))
+              chosen.update(range(max(0, len(lines) - 45), len(lines)))
+              excerpt = "\n".join(lines[index] for index in sorted(chosen))
+              notice("Log " + name.rsplit("/", 1)[-1], excerpt[-18000:] or "(empty log)")
+          PY
