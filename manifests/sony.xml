@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote name="sony-sm8550" fetch="https://github.com/sony-sm8550-TWRP" />
+  <project name="device_sony_pdx234-TWRP" path="device/sony/pdx234"
+           remote="sony-sm8550" revision="71ef107e224a8e3aca1ee46f5e9d1b9ef9a8d471" clone-depth="1" />
+  <project name="device_sony_sm8550-common-TWRP" path="device/sony/sm8550-common"
+           remote="sony-sm8550" revision="c8b46a320de571a20c644013aec6fcc8e0b9f1f2" clone-depth="1" />
+  <extend-project name="android_bootable_recovery" path="bootable/recovery"
+                  revision="d7b1a5fd593aec9af096f1a26d5a91bf3f12ee97" />
+  <extend-project name="android_external_lvgl" path="external/lvgl"
+                  revision="28714550785a8bb620da697346eb6c8c5f61b7ec" />
+</manifest>

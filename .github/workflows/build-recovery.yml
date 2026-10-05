@@ -1,0 +1,69 @@
+name: Build Xperia 1 V GUI2 recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: "Build jobs (1-4; 2 is recommended for a private-repository runner)"
+        required: true
+        default: "2"
+        type: choice
+        options: ["1", "2", "3", "4"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xperia-1v-recovery
+  cancel-in-progress: false
+
+jobs:
+  recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      BUILD_DIR: /home/runner/twrp-source
+      ARTIFACT_DIR: /home/runner/twrp-artifacts
+      BUILD_JOBS: ${{ inputs.jobs }}
+      ALLOW_MISSING_DEPENDENCIES: "true"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout build configuration
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Prepare disk, swap and build dependencies
+        run: bash scripts/setup-runner.sh
+      - name: Sync Android 16 LVGL sources and Sony device trees
+        run: bash scripts/sync.sh
+      - name: Merge GUI2 PR 31 and adapt the device tree
+        run: bash scripts/prepare-source.sh
+      - name: Build and verify recovery.img
+        run: bash scripts/build.sh
+      - name: Upload recovery image
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-XQ-DQ72-GUI2-${{ github.run_number }}
+          path: |
+            /home/runner/twrp-artifacts/recovery.img
+            /home/runner/twrp-artifacts/SHA256SUMS
+            /home/runner/twrp-artifacts/build-info.txt
+            /home/runner/twrp-artifacts/source-manifest.xml
+            /home/runner/twrp-artifacts/recovery-header.txt
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+      - name: Upload build logs and source adjustments
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-build-logs-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            /home/runner/twrp-artifacts/*.log
+            /home/runner/twrp-artifacts/*.patch
+            /home/runner/twrp-artifacts/build-info.txt
+            /home/runner/twrp-artifacts/source-manifest.xml
+            /home/runner/twrp-artifacts/recovery-header.txt
+          if-no-files-found: warn
+          retention-days: 14
