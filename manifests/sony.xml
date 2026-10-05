@@ -10,10 +10,10 @@
   <extend-project name="android_external_lvgl" path="external/lvgl"
                   revision="28714550785a8bb620da697346eb6c8c5f61b7ec" />
   <!-- Other VNDK snapshots and emulator binaries are unused by this recovery. -->
-  <remove-project path="prebuilts/vndk/v30" />
-  <remove-project path="prebuilts/vndk/v32" />
-  <remove-project path="prebuilts/vndk/v33" />
-  <remove-project path="prebuilts/vndk/v34" />
-  <remove-project path="prebuilts/android-emulator" />
-  <remove-project path="prebuilts/qemu-kernel" />
+  <remove-project path="prebuilts/vndk/v30" optional="true" />
+  <remove-project path="prebuilts/vndk/v32" optional="true" />
+  <remove-project path="prebuilts/vndk/v33" optional="true" />
+  <remove-project path="prebuilts/vndk/v34" optional="true" />
+  <remove-project path="prebuilts/android-emulator" optional="true" />
+  <remove-project path="prebuilts/qemu-kernel" optional="true" />
 </manifest>
