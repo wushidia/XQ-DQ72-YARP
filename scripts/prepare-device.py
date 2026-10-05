@@ -2,6 +2,7 @@
 """Apply the Sony Android 12.1 tree's Android 16 compatibility adjustments."""
 import json
 import os
+import subprocess
 from pathlib import Path
 
 root = Path(os.environ["BUILD_DIR"])
@@ -28,7 +29,20 @@ product.write_text(text)
 config = common / "BoardConfigCommon.mk"
 text = config.read_text().replace("BOARD_SYSTEMSDK_VERSIONS := 31",
                                   "BOARD_SYSTEMSDK_VERSIONS := $(PLATFORM_SDK_VERSION)")
+# CTS release validation must use Android's actual stable release, rather than
+# the legacy Sony recovery's synthetic PLATFORM_VERSION value.
+text = "\n".join(line for line in text.splitlines()
+                 if not line.startswith("PLATFORM_VERSION_LAST_STABLE :=")) + "\n"
 config.write_text(text)
+# Sparse CTS checkout excludes tests; Make still requires these two release
+# tables for every target, including recoveryimage. Restore only their pinned
+# upstream blobs on the runner, without checking out the test suite.
+for filename in ("platform_versions.txt", "platform_releases.txt"):
+    relative = "tests/tests/os/assets/" + filename
+    target = root / "cts" / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(subprocess.check_output(
+        ["git", "-C", str(root / "cts"), "show", "HEAD:" + relative]))
 product_common = common / "device-common.mk"
 text = product_common.read_text()
 # Android 16 removed the legacy standalone GSI key product. Recovery does

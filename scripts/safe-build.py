@@ -12,7 +12,6 @@ root = Path(os.environ["BUILD_DIR"])
 command = """set -eo pipefail
 source build/envsetup.sh
 lunch twrp_pdx234 bp2a eng
-mka installclean
 mka -j"$BUILD_JOBS" recoveryimage
 """
 process = subprocess.Popen(["bash", "-c", command], cwd=root, start_new_session=True)
