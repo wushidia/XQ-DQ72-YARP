@@ -25,7 +25,7 @@ patterns = {
     ],
     "cts": ["/*", "!/*/", "/build/", "/common/", "/libs/"],
     "prebuilts/sdk": [
-        "/*", "!/*/", "/current/", "/tools/", "/extensions/",
+        "/*", "!/*/", "/current/", "/tools/", "/extensions/", "/update_prebuilts/",
         "/29/", "/31/", "/33/", "/34/", "/35/", "/36/",
     ],
 }
