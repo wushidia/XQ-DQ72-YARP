@@ -34,10 +34,20 @@ jobs:
           persist-credentials: false
       - name: Prepare disk, swap and build dependencies
         run: bash scripts/setup-runner.sh
-      - name: Sync Android 16 LVGL sources and Sony device trees
-        run: bash scripts/sync.sh
+      - name: Fetch Android and Sony source metadata
+        run: bash scripts/sync.sh metadata
+      - name: Upload source metadata diagnostics
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-source-metadata-${{ github.run_number }}
+          path: /home/runner/twrp-artifacts/*.log
+          retention-days: 14
+      - name: Checkout Android sources and selected Linux prebuilts
+        run: bash scripts/sync.sh checkout
       - name: Merge GUI2 PR 31 and adapt the device tree
         run: bash scripts/prepare-source.sh
+      - name: Free duplicate prebuilt blobs and reserve build space
+        run: bash scripts/prepare-build-space.sh
       - name: Build and verify recovery.img (attempt 1)
         id: build_1
         continue-on-error: true

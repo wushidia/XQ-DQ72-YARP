@@ -16,6 +16,10 @@ patterns = {
         "/linux-x86/1.83.0/",
     ],
     "prebuilts/jdk/jdk21": ["/*", "!/*/", "/linux-x86/"],
+    "prebuilts/sdk": [
+        "/*", "!/*/", "/current/", "/tools/", "/extensions/",
+        "/29/", "/31/", "/33/", "/34/", "/35/", "/36/",
+    ],
 }
 for project, rules in patterns.items():
     gitdir = root / ".repo/projects" / (project + ".git")

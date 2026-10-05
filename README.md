@@ -12,7 +12,7 @@ TWRP-Test LVGL recovery，并在 Actions 的源码工作目录中合入 GUI2 PR 
 构建不向任何上游仓库推送、不关闭或合并上游 PR。
 
 在 **Actions → Build Xperia 1 V GUI2 recovery → Run workflow** 启动编译。
-私有仓库标准 runner 默认使用 2 个编译任务和 16 GiB swap，超时为 6 小时。
+私有仓库标准 runner 默认使用 2 个编译任务，源码同步期间使用 8 GiB swap，编译时使用最高 16 GiB swap，超时为 6 小时。
 下载成功运行中的 **Xperia-1V-XQ-DQ72-GUI2** artifact，包含：
 
 - `recovery.img` 及 `SHA256SUMS`
@@ -35,3 +35,7 @@ Android 16 manifest。成功编译和镜像结构验证不能代替 XQ-DQ72 真�
 为适应标准 runner 磁盘容量，同步使用 partial clone；Clang、Rust、JDK
 仅检出本次构建对应的 Linux 工具链。保留 Sony 设备所用 VNDK 31，
 移除其余 VNDK 快照与模拟器预编译文件。
+
+同步阶段在磁盘余量低于 5 GiB 时会提前停止并保存诊断日志；源码检出后，
+释放预编译文件的重复 Git blob 缓存（保留提交、目录元数据和工作目录文件），
+确保 Actions runner 与编译输出有可用空间。
