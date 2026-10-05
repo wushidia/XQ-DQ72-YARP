@@ -4,8 +4,14 @@ mkdir -p "$ARTIFACT_DIR"
 exec > >(tee "$ARTIFACT_DIR/runner.log") 2>&1
 df -h
 free -h
+lsblk
 # Only remove preinstalled toolchains from the disposable GitHub-hosted runner.
 sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/powershell /usr/local/share/chromium
+sudo rm -rf /opt/az /opt/microsoft /opt/google /opt/pipx \
+  /usr/local/.ghcup /usr/local/share/boost /usr/local/lib/node_modules \
+  /usr/share/swift /usr/share/miniconda /usr/share/gradle \
+  /usr/local/julia* /usr/local/lib/R /usr/local/aws* \
+  /usr/local/lib/python3.*/site-packages /usr/local/lib/python3.*/dist-packages
 sudo docker image prune --all --force || true
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
@@ -16,11 +22,11 @@ sudo apt-get install -y --no-install-recommends \
 sudo apt-get clean
 # Soong needs considerably more memory than the private-repository runner provides.
 swap_root=/mnt
-if [ "$(df --output=avail -BG /mnt | tail -n 1 | tr -dc '0-9')" -lt 26 ]; then
+if [ "$(df --output=avail -BG /mnt | tail -n 1 | tr -dc '0-9')" -lt 18 ]; then
   swap_root=/
 fi
 swap_file="$swap_root/twrp-build.swap"
-sudo fallocate -l 24G "$swap_file"
+sudo fallocate -l 16G "$swap_file"
 sudo chmod 600 "$swap_file"
 sudo mkswap "$swap_file"
 sudo swapon "$swap_file"

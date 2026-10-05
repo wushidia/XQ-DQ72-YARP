@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 exec > >(tee "$ARTIFACT_DIR/build.log") 2>&1
+rm -f "$ARTIFACT_DIR/build-success"
 case "$BUILD_JOBS" in 1|2|3|4) ;; *) echo "Invalid BUILD_JOBS"; exit 1 ;; esac
 cd "$BUILD_DIR"
 export ALLOW_MISSING_DEPENDENCIES=true
@@ -16,6 +17,7 @@ python3 "$GITHUB_WORKSPACE/scripts/verify-image.py"
 cd "$ARTIFACT_DIR"
 sha256sum recovery.img > SHA256SUMS
 cat SHA256SUMS
+touch "$ARTIFACT_DIR/build-success"
 {
   echo "### Xperia 1 V GUI2 recovery built"
   echo
