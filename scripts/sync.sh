@@ -31,7 +31,7 @@ case "$phase" in
   checkout)
     exec > >(tee "$ARTIFACT_DIR/checkout.log") 2>&1
     python3 "$GITHUB_WORKSPACE/scripts/sparse-prebuilts.py"
-    sync_phase --local-only
+    python3 "$GITHUB_WORKSPACE/scripts/checkout-source.py"
     repo manifest -r -o "$ARTIFACT_DIR/source-manifest.xml"
     ;;
   *) echo "Unknown sync phase"; exit 1 ;;

@@ -42,8 +42,67 @@ jobs:
           name: Xperia-1V-source-metadata-${{ github.run_number }}
           path: /home/runner/twrp-artifacts/*.log
           retention-days: 14
-      - name: Checkout Android sources and selected Linux prebuilts
+      - name: Checkout Android sources and clear duplicate Git blobs (attempt 1)
+        id: source_1
+        continue-on-error: true
         run: bash scripts/sync.sh checkout
+      - name: Upload checkout diagnostics (attempt 1)
+        if: steps.source_1.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-checkout-${{ github.run_number }}-attempt-1
+          path: /home/runner/twrp-artifacts/*
+          retention-days: 14
+      - name: Wait for checkout repair (attempt 2)
+        id: source_repair_2
+        if: steps.source_1.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/wait-repair.sh source-2
+      - name: Resume source checkout (attempt 2)
+        id: source_2
+        if: steps.source_1.outcome == 'failure' && steps.source_repair_2.outcome == 'success'
+        continue-on-error: true
+        run: bash scripts/sync.sh checkout
+      - name: Upload checkout diagnostics (attempt 2)
+        if: steps.source_2.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-checkout-${{ github.run_number }}-attempt-2
+          path: /home/runner/twrp-artifacts/*
+          retention-days: 14
+      - name: Wait for checkout repair (attempt 3)
+        id: source_repair_3
+        if: steps.source_2.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/wait-repair.sh source-3
+      - name: Resume source checkout (attempt 3)
+        id: source_3
+        if: steps.source_2.outcome == 'failure' && steps.source_repair_3.outcome == 'success'
+        continue-on-error: true
+        run: bash scripts/sync.sh checkout
+      - name: Upload checkout diagnostics (attempt 3)
+        if: steps.source_3.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Xperia-1V-checkout-${{ github.run_number }}-attempt-3
+          path: /home/runner/twrp-artifacts/*
+          retention-days: 14
+      - name: Wait for checkout repair (attempt 4)
+        id: source_repair_4
+        if: steps.source_3.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/wait-repair.sh source-4
+      - name: Resume source checkout (attempt 4)
+        id: source_4
+        if: steps.source_3.outcome == 'failure' && steps.source_repair_4.outcome == 'success'
+        continue-on-error: true
+        run: bash scripts/sync.sh checkout
+      - name: Require complete source checkout
+        if: steps.source_1.outcome != 'success' && steps.source_2.outcome != 'success' && steps.source_3.outcome != 'success' && steps.source_4.outcome != 'success'
+        run: exit 1
       - name: Merge GUI2 PR 31 and adapt the device tree
         run: bash scripts/prepare-source.sh
       - name: Free duplicate prebuilt blobs and reserve build space

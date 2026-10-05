@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 attempt="$1"
-case "$attempt" in 2|3|4|5|6|7|8) ;; *) exit 1 ;; esac
+case "$attempt" in 2|3|4|5|6|7|8|source-2|source-3|source-4) ;; *) exit 1 ;; esac
 repair_path="repairs/$GITHUB_RUN_ID/attempt-$attempt.sh"
 endpoint="repos/$GITHUB_REPOSITORY/contents/$repair_path?ref=main"
 echo "Waiting up to 45 minutes for $repair_path in this build repository."

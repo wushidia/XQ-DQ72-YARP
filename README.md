@@ -39,3 +39,8 @@ Android 16 manifest。成功编译和镜像结构验证不能代替 XQ-DQ72 真�
 同步阶段在磁盘余量低于 5 GiB 时会提前停止并保存诊断日志；源码检出后，
 释放预编译文件的重复 Git blob 缓存（保留提交、目录元数据和工作目录文件），
 确保 Actions runner 与编译输出有可用空间。
+
+检出以 4 个项目为一批；每批成功后立即释放工作目录中已有文件的重复 Git blob，
+提交和目录元数据继续保留。已完成批次记录在 runner，磁盘保护触发后可在同一
+runner 提交 `repairs/<run-id>/attempt-source-2.sh` 等修补文件后继续检出。
+CTS 仅保留公共构建配置和库，Linux 构建不检出 macOS 工具链。

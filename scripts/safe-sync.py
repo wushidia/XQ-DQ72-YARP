@@ -30,6 +30,15 @@ while process.poll() is None:
             value = float(size[:-1]) * scale[suffix] if suffix in scale else float(size)
             sizes.append((value, line))
         print("\n".join(line for _, line in sorted(sizes, reverse=True)[:30]), flush=True)
+        working = subprocess.run(["du", "-h", "--max-depth=2", str(root)],
+                                 text=True, capture_output=True)
+        working_sizes = []
+        for line in working.stdout.splitlines():
+            size, path = line.split("\t", 1)
+            suffix = size[-1]
+            value = float(size[:-1]) * scale[suffix] if suffix in scale else float(size)
+            working_sizes.append((value, line))
+        print("\n".join(line for _, line in sorted(working_sizes, reverse=True)[:35]), flush=True)
         print(subprocess.check_output(["df", "-h"], text=True), flush=True)
         sys.exit(86)
     time.sleep(2)

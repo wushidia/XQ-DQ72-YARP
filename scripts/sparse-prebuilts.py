@@ -16,6 +16,14 @@ patterns = {
         "/linux-x86/1.83.0/",
     ],
     "prebuilts/jdk/jdk21": ["/*", "!/*/", "/linux-x86/"],
+    "prebuilts/misc": [
+        "/*", "!/*/", "/.prebuilt_info/", "/common/", "/linux-x86/", "/protobuf_vendorcompat/",
+    ],
+    "prebuilts/tools": ["/*", "!/*/", "/common/", "/linux-x86_64/"],
+    "prebuilts/build-tools": [
+        "/*", "!/*/", "/common/", "/linux-x86/", "/linux_musl-x86/", "/path/", "/sysroots/",
+    ],
+    "cts": ["/*", "!/*/", "/build/", "/common/", "/libs/"],
     "prebuilts/sdk": [
         "/*", "!/*/", "/current/", "/tools/", "/extensions/",
         "/29/", "/31/", "/33/", "/34/", "/35/", "/36/",
