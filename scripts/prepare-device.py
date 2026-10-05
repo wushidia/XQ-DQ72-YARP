@@ -29,4 +29,15 @@ config = common / "BoardConfigCommon.mk"
 text = config.read_text().replace("BOARD_SYSTEMSDK_VERSIONS := 31",
                                   "BOARD_SYSTEMSDK_VERSIONS := $(PLATFORM_SDK_VERSION)")
 config.write_text(text)
-print("Adjusted Sony dependency, OEM identity and System SDK selection.")
+product_common = common / "device-common.mk"
+text = product_common.read_text()
+# Android 16 removed the legacy standalone GSI key product. Recovery does
+# not build a GSI; retain this inheritance only for trees that provide it.
+text = text.replace(
+    "$(call inherit-product, $(SRC_TARGET_DIR)/product/gsi_keys.mk)",
+    "$(call inherit-product-if-exists, $(SRC_TARGET_DIR)/product/gsi_keys.mk)")
+# Android 16 derives BOARD_API_LEVEL from its release configuration.
+text = "\n".join(line for line in text.splitlines()
+                 if not line.startswith("BOARD_API_LEVEL :=")) + "\n"
+product_common.write_text(text)
+print("Adjusted Sony dependency, OEM identity, System SDK and legacy product configuration.")
