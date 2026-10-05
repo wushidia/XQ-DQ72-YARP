@@ -21,7 +21,7 @@ patterns = {
     ],
     "prebuilts/tools": ["/*", "!/*/", "/common/", "/linux-x86_64/"],
     "prebuilts/build-tools": [
-        "/*", "!/*/", "/common/", "/linux-x86/", "/linux_musl-x86/", "/path/", "/sysroots/",
+        "/*", "!/*/", "/common/", "/linux-x86/", "/linux_musl-x86/", "/path/", "!/path/*/", "/path/linux-x86/", "/sysroots/",
     ],
     "cts": ["/*", "!/*/", "/build/", "/common/", "/libs/"],
     "prebuilts/sdk": [

@@ -39,5 +39,15 @@ text = text.replace(
 # Android 16 derives BOARD_API_LEVEL from its release configuration.
 text = "\n".join(line for line in text.splitlines()
                  if not line.startswith("BOARD_API_LEVEL :=")) + "\n"
+# These old standalone packages have no source modules in the Android 16
+# recovery. Crypto is built into recovery/vold; Sony's QTI boot HAL blobs
+# are already copied from the supplied common tree.
+text = text.replace(
+    "PRODUCT_PACKAGES += \\\n    qcom_decrypt \\\n    qcom_decrypt_fbe",
+    "# Decryption is supplied by TW_INCLUDE_CRYPTO in recovery/vold.")
+text = text.replace("    android.hardware.boot@1.2-impl-qti \\\n", "")
+text = text.replace("    android.hardware.boot@1.2-impl-qti.recovery \\\n", "")
+# The common repository has no Android.bp namespace to export.
+text = text.replace("PRODUCT_SOONG_NAMESPACES += \\\n    $(COMMON_PATH)", "")
 product_common.write_text(text)
 print("Adjusted Sony dependency, OEM identity, System SDK and legacy product configuration.")

@@ -9,6 +9,11 @@
                   revision="d7b1a5fd593aec9af096f1a26d5a91bf3f12ee97" />
   <extend-project name="android_external_lvgl" path="external/lvgl"
                   revision="28714550785a8bb620da697346eb6c8c5f61b7ec" />
+  <!-- Sony's copied Qualcomm display libraries require these HIDL interfaces. -->
+  <remote name="lineage-qcom" fetch="https://github.com/LineageOS" />
+  <project name="android_vendor_qcom_opensource_interfaces"
+           path="vendor/qcom/opensource/interfaces" remote="lineage-qcom"
+           revision="7e41eeb480578966fd87d42f439aa0b4fb4188c9" clone-depth="1" />
   <!-- Other VNDK snapshots and emulator binaries are unused by this recovery. -->
   <remove-project path="prebuilts/vndk/v30" optional="true" />
   <remove-project path="prebuilts/vndk/v32" optional="true" />

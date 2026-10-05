@@ -32,6 +32,7 @@ git -C "$BUILD_DIR/device/sony/sm8550-common" diff > "$ARTIFACT_DIR/sm8550-commo
   echo "Device tree: $DEVICE_SHA"
   echo "SM8550 common tree: $COMMON_SHA"
   echo "LVGL: $LVGL_SHA"
+  echo "Qualcomm display interfaces: $QCOM_INTERFACES_SHA"
   echo "Action: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
   echo "UTC time: $(date -u +%FT%TZ)"
 } | tee "$ARTIFACT_DIR/build-info.txt"
