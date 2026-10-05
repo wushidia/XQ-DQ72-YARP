@@ -79,6 +79,9 @@ jobs:
               chosen = set()
               for index in matches[-12:]:
                   chosen.update(range(max(0, index - 3), min(len(lines), index + 10)))
+              resource_samples = [index for index, line in enumerate(lines) if "Build resources at" in line]
+              for index in resource_samples[::max(1, len(resource_samples) // 6)]:
+                  chosen.update(range(index, min(len(lines), index + 9)))
               chosen.update(range(max(0, len(lines) - 45), len(lines)))
               excerpt = "\n".join(lines[index] for index in sorted(chosen))
               notice("Log " + name.rsplit("/", 1)[-1], excerpt[-18000:] or "(empty log)")
