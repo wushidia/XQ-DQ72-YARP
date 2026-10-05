@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 
 root = Path(os.environ["BUILD_DIR"])
+job_start_file = Path(os.environ["ARTIFACT_DIR"]) / "job-started-epoch.txt"
+job_deadline = int(job_start_file.read_text().strip()) + 330 * 60
 command = """set -eo pipefail
 source build/envsetup.sh
 lunch twrp_pdx234 bp2a eng
@@ -28,7 +30,7 @@ while process.poll() is None:
         print(f"Build resources at {elapsed / 60:.1f} min: disk free {free / 1024**3:.2f} GiB; "
               f"RAM available {memory['MemAvailable'] / 1024**3:.2f} GiB; "
               f"swap free {memory['SwapFree'] / 1024**3:.2f} GiB", flush=True)
-        result = subprocess.run(["ps", "-eo", "pid,ppid,rss,comm", "--sort=-rss"],
+        result = subprocess.run(["ps", "-eo", "pid,ppid,rss,pcpu,comm", "--sort=-rss"],
                                 text=True, capture_output=True)
         print("\n".join(result.stdout.splitlines()[:7]), flush=True)
         last_report = elapsed
@@ -37,6 +39,8 @@ while process.poll() is None:
         reason = "fewer than 4 GiB remain for the runner and diagnostics"
     elif memory["MemAvailable"] < 192 * 1024**2 and memory["SwapFree"] < 512 * 1024**2:
         reason = "RAM and swap are nearly exhausted"
+    elif time.time() >= job_deadline:
+        reason = "the job is approaching its 6-hour limit; preserving diagnostics before cancellation"
     if reason:
         print("Stopping the build safely: " + reason, flush=True)
         # Include descendants that create their own process groups.

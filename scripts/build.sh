@@ -15,7 +15,7 @@ report_resources() {
 trap report_resources EXIT
 export ALLOW_MISSING_DEPENDENCIES=true
 export LC_ALL=C
-export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-6GiB}"
+export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-12GiB}"
 echo "Soong Go memory limit: $SOONG_GOMEMLIMIT"
 python3 "$GITHUB_WORKSPACE/scripts/safe-build.py"
 image="$BUILD_DIR/out/target/product/pdx234/recovery.img"

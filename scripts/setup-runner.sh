@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 mkdir -p "$ARTIFACT_DIR"
+date +%s > "$ARTIFACT_DIR/job-started-epoch.txt"
 exec > >(tee "$ARTIFACT_DIR/runner.log") 2>&1
 df -h
 free -h
