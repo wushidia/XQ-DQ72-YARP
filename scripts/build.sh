@@ -15,8 +15,13 @@ report_resources() {
 trap report_resources EXIT
 export ALLOW_MISSING_DEPENDENCIES=true
 export LC_ALL=C
-export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-12GiB}"
-echo "Soong Go memory limit: $SOONG_GOMEMLIMIT"
+# Keep Soong Go heap below the hosted runner physical memory.
+# These remain overridable for a larger self-hosted runner.
+export GOMAXPROCS="${GOMAXPROCS:-2}"
+export GOGC="${GOGC:-50}"
+export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-4GiB}"
+export GOMEMLIMIT="${GOMEMLIMIT:-4GiB}"
+echo "Soong Go settings: GOMAXPROCS=$GOMAXPROCS GOGC=$GOGC SOONG_GOMEMLIMIT=$SOONG_GOMEMLIMIT"
 python3 "$GITHUB_WORKSPACE/scripts/safe-build.py"
 image="$BUILD_DIR/out/target/product/pdx234/recovery.img"
 test -s "$image"
