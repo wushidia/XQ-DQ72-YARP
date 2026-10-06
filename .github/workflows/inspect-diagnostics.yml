@@ -7,6 +7,11 @@ on:
         description: "Recovery build run ID"
         required: true
         type: string
+      job_id:
+        description: "Optional Actions job ID for direct log inspection"
+        required: false
+        default: ""
+        type: string
       artifact_name:
         description: "Exact diagnostic artifact name (empty selects latest failure logs)"
         required: false
@@ -27,6 +32,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TARGET_RUN_ID: ${{ inputs.run_id }}
           TARGET_ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          TARGET_JOB_ID: ${{ inputs.job_id }}
         run: |
           python3 - <<'PY'
           import io
@@ -34,6 +40,7 @@ jobs:
           import os
           import re
           import subprocess
+          import sys
           import zipfile
 
           repository = os.environ["GITHUB_REPOSITORY"]
@@ -54,6 +61,25 @@ jobs:
               text = clean(text)
               escaped = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print("::notice title=" + title + "::" + escaped, flush=True)
+
+          job_id = os.environ.get("TARGET_JOB_ID", "")
+          if job_id:
+              assert job_id.isdigit(), "Job ID must be numeric"
+              result = subprocess.run(["gh", "api", prefix + "actions/jobs/" + job_id + "/logs"],
+                                      capture_output=True)
+              if result.returncode:
+                  notice("Job log retrieval", result.stderr.decode("utf-8", "replace")[-6000:])
+                  sys.exit(0)
+              text = result.stdout.decode("utf-8", "replace")
+              lines = text.splitlines()
+              selected_lines = set(range(max(0, len(lines) - 70), len(lines)))
+              for index, line in enumerate(lines):
+                  if re.search(r"FAILED:|error:|fatal:|Stopping the build|Killed|AssertionError|Traceback|No space left|out of memory", line, re.I):
+                      selected_lines.update(range(max(0, index - 3), min(len(lines), index + 10)))
+              excerpt = "\n".join(lines[index] for index in sorted(selected_lines))[-24000:]
+              for index in range(0, len(excerpt), 6000):
+                  notice("Job log " + str(index // 6000 + 1), excerpt[index:index + 6000])
+              sys.exit(0)
 
           listing = json.loads(api("actions/runs/" + run_id + "/artifacts?per_page=100"))
           artifacts = [item for item in listing["artifacts"] if not item["expired"]]
