@@ -1,56 +1,101 @@
 # Xperia 1 V / XQ-DQ72 GUI2 recovery
 
-此仓库通过 GitHub Actions 为 Sony Xperia 1 V（pdx234 / XQ-DQ72）构建
-TWRP-Test LVGL recovery，并在 Actions 的源码工作目录中合入 GUI2 PR #31。
+为 Sony Xperia 1 V（pdx234 / XQ-DQ72）构建基于 Android 16 的 TWRP-Test LVGL / GUI2 recovery。
+当前版本标识为 `final-logging-v1`，合入固定版本的 GUI2 PR #31，并包含 Sony 设备适配与日志控制修复。
 
-- Manifest: [TWRP-Test/platform_manifest_twrp_aosp, lvgl](https://github.com/TWRP-Test/platform_manifest_twrp_aosp/tree/lvgl)
-- GUI2: [android_bootable_recovery PR #31](https://github.com/TWRP-Test/android_bootable_recovery/pull/31)
-- Device: [sony-sm8550-TWRP/device_sony_pdx234-TWRP](https://github.com/sony-sm8550-TWRP/device_sony_pdx234-TWRP)
-- Common: [sony-sm8550-TWRP/device_sony_sm8550-common-TWRP](https://github.com/sony-sm8550-TWRP/device_sony_sm8550-common-TWRP)
+## 功能与修复
 
-源码固定版本见 `config/sources.env` 和 `manifests/sony.xml`。
-构建不向任何上游仓库推送、不关闭或合并上游 PR。
+- **日志开关**：在「设置 → 通用设置 → 日志记录」中提供「记录日志到 Metadata」，默认开启，选择会保存并在下次进入 recovery 时恢复。
+- **解密输入**：支持自动、图案、PIN、密码输入类型选择；区分无法读取锁屏类型、Metadata 准备失败与用户凭据校验失败。
+- **设置持久化**：修复 persist 挂载路径和设置文件读写，保存语言、主题及日志开关；恢复默认设置后写入持久化文件。
+- **USB 存储与 SD 卡**：修正 SD 卡块设备和 configfs UMS 配置，检查 USB 存储启停结果，并在启用失败时保留挂载页面。
+- **振动与服务兼容**：增加 Sony 振动 sysfs 后备实现，整合 QSEE、KeyMint、keystore2 与 recovery HIDL manifest 适配，以及旧厂商程序所需的 libbase ABI。
+- **镜像封装检查**：在最终打包前恢复 recovery 专用 hwservicemanager，检查镜像中实际打包的 recovery、日志程序与共享库。
 
-在 **Actions → Build Xperia 1 V GUI2 recovery → Run workflow** 启动编译。
-私有仓库标准 runner 默认使用 2 个编译任务，源码同步及编译期间使用 8 GiB 专用 swap，Soong Go 内存限制为 6 GiB，超时为 6 小时。
-下载成功运行中的 **Xperia-1V-XQ-DQ72-GUI2** artifact，包含：
+## Metadata 日志开关
 
-- `recovery.img` 及 `SHA256SUMS`
-- 实际源码版本、合并 commit 和完整解析后的 manifest
-- 镜像头及分区大小检查结果
+入口：**设置 → 通用设置 → 日志记录 → 记录日志到 Metadata**。
+英文界面名称为 **Settings → General Settings → Diagnostics → Save logs to Metadata**。
 
-失败运行仍上传同步/编译日志和设备树调整 patch。
-原始 Sony 设备树使用 Android 12.1 分支；此仓库的脚本将其适配至指定的
-Android 16 manifest。成功编译和镜像结构验证不能代替 XQ-DQ72 真机的
-启动、触摸、解密和其他功能测试。
+- 首次使用默认开启；旧设置文件没有此字段时也使用开启状态。
+- 关闭后，后台日志程序停止向 `/metadata` 保存快照，退出 recovery 时也停止保存最终快照。
+- 状态保存在 persist 的 TWRP 设置文件中；下次启动在访问 Metadata 前读取已保存的选择。
+- 设置保存失败时回退界面状态；设置文件无效或无法读取时，后台程序等待 recovery 加载设置。
+- 同一次启动中重新开启会继续当前日志目录；关闭开关后，已有日志仍保留。
+- 此开关控制后台 Metadata 诊断日志；控制台及 `/tmp/recovery.log` 继续按 recovery 的临时日志逻辑运行。
 
-整个工作流的源码同步、PR 合入、构建及产物保存都发生在 GitHub runner；
-提交此配置时不需要本地 checkout 或下载镜像。
+自动日志目录为 `/metadata/XQ-DQ72-YARP/logs/`：
 
-构建失败时会立即上传对应 attempt 的 diagnostics artifact，并保留同一 runner
-等待最多 45 分钟。提交 `repairs/<run-id>/attempt-<下次序号>.sh` 后，runner
-会仅从此仓库读取并执行修补脚本，然后继续编译（最多 8 次）。这套流程使用
-只读仓库 token 获取修补文件；编译步骤不接收该 token。
+- `latest/`：当前记录日志的 recovery 启动，包括 recovery 日志、内核日志、logcat 和诊断状态。
+- `previous/`：上一轮已记录日志的 recovery 启动。
 
-为适应标准 runner 磁盘容量，同步使用 partial clone；Clang、Rust、JDK
-仅检出本次构建对应的 Linux 工具链。保留 Sony 设备所用 VNDK 31，
-移除其余 VNDK 快照与模拟器预编译文件。
+可通过 recovery 文件管理器复制所需日志。分享日志前应检查其中的设备运行信息并脱敏。
 
-同步阶段在磁盘余量低于 5 GiB 时会提前停止并保存诊断日志；源码检出后，
-释放预编译文件的重复 Git blob 缓存（保留提交、目录元数据和工作目录文件），
-确保 Actions runner 与编译输出有可用空间。
+## 使用 GitHub Actions 编译
 
-检出以 4 个项目为一批；每批成功后立即释放工作目录中已有文件的重复 Git blob，
-提交和目录元数据继续保留。已完成批次记录在 runner，磁盘保护触发后可在同一
-runner 提交 `repairs/<run-id>/attempt-source-2.sh` 等修补文件后继续检出。
-CTS 仅保留公共构建配置和库，Linux 构建不检出 macOS 工具链。
+1. 打开 **Actions → Build Xperia 1 V GUI2 recovery → Run workflow**。
+2. 选择 `main` 分支；标准私有仓库 runner 建议保持 `jobs=2`，可选范围为 1–4。
+3. 工作流先验证固定版本配置并测试日志开关，再同步源码、合入 GUI2、应用发布补丁和编译镜像。
+4. 成功后下载 **Xperia-1V-XQ-DQ72-GUI2-final-<run-number>** artifact。
 
-编译每分钟记录可用磁盘、内存、swap 和占用内存最多的进程；在磁盘低于
-4 GiB，或内存与 swap 接近耗尽时提前停止以保存诊断。源码准备完成后会单独
-上传包含完整 manifest 的诊断 artifact，便于 runner 意外中断后追踪版本。
+镜像 artifact 保留 30 天，包含：
 
-Sony 预编译显示库所需的 Qualcomm HIDL 接口额外取自固定版本的
-LineageOS `android_vendor_qcom_opensource_interfaces`。旧的独立 QCOM 解密包
-由 Android 16 recovery/vold 的解密实现替代；保留 Sony 原有的 QTI boot HAL 文件。
-镜像验证检查 v4 镜像头、100 MiB 分区限制、LZ4 ramdisk、ARM64 recovery
-可执行程序、recovery fstab 和 GUI2 显示实现。
+- `recovery.img` 与 `SHA256SUMS`
+- `recovery-header.txt`：镜像头、架构和大小检查结果
+- `build-info.txt` 与 `source-manifest.xml`：构建配置版本及实际源码版本
+
+运行结束时会尽可能上传 **Xperia-1V-build-logs-<run-number>-<run-attempt>** 诊断 artifact，保留 14 天。
+当前流程直接报告失败并保存已有诊断，不再使用旧版等待修补脚本和多轮重编译机制。
+
+推送构建配置、源码补丁或测试到 `main` 时自动执行快速验证；完整 Android 编译通过 **Run workflow** 手动发起。
+仅更新 README 不会触发这条构建工作流。
+
+## 源码与构建流程
+
+本仓库保存构建脚本、固定版本依赖清单、源码补丁与设备覆盖文件；Android 平台源码在构建时从上游同步。
+
+- `config/sources.env`：manifest、GUI2 和设备相关的固定提交。
+- `manifests/final-platform.xml` 与 `config/source-remotes.json`：394 个固定版本依赖及公开源码地址；由 `scripts/materialize-manifest.py` 生成可同步 manifest。
+- `patches/series.json` 与 `patches/*.patch`：六个源码组件的基准树、补丁校验和及修改后文件校验和。
+- `overlays/`：日志程序、设备 init、SELinux、VINTF 和 recovery 配置。
+- `scripts/`：源码同步、设备适配、资源保护、镜像编译与封装验证。
+- `tests/logging-control-test.py`：默认开启、设置解析、关闭后停写、运行中暂停/恢复及重启记忆测试。
+
+补丁覆盖 `bootable/recovery`、Sony pdx234 和 sm8550-common 设备树、`system/hwservicemanager`、`system/libbase` 与 `system/vold`。
+构建时先合入固定版本 GUI2，再校验基准源码、应用补丁与覆盖文件、进行 Android 16 设备适配。
+重复应用发布补丁会识别已完成状态，遇到非预期源码修改会停止。
+Sony 厂商振动服务从固定版本上游获取并校验 SHA256，避免在本仓库重复存放二进制。
+
+配置检查可单独运行：
+
+```bash
+python3 scripts/verify-project.py
+```
+
+在安装了 Python 3 和 GCC 的 Linux 环境中运行日志回归测试：
+
+```bash
+python3 tests/logging-control-test.py
+```
+
+测试使用临时目录和属性模拟，不挂载真实 Metadata 或 persist 分区。
+完整编译流程见 [build-recovery.yml](.github/workflows/build-recovery.yml)。
+
+## 构建资源与验证范围
+
+工作流使用 Ubuntu 24.04 runner，默认 2 个编译任务、8 GiB 专用 swap、Soong Go 内存限制 6 GiB，任务超时为 6 小时。
+源码同步使用 partial clone 与精简预编译工具链，保留 Sony 所需的 VNDK 31，并释放重复 Git blob。
+编译过程记录磁盘、内存和 swap 状态，在资源接近耗尽或任务接近时限时提前停止以保存诊断。
+
+镜像验证检查 Android v4 镜像头、100 MiB recovery 分区大小限制、LZ4 ramdisk、AArch64 GUI2 程序、fstab、日志控制以及关键服务和共享库的打包内容。
+后台日志和设置解析已有主机回归测试；成功编译与镜像结构检查仍需配合 XQ-DQ72 真机验证启动、触摸、解密、USB 存储、振动和新增日志开关。
+
+runner 使用通用构建身份完成本地 GUI2 合并，checkout 不保留仓库登录凭据；构建脚本无需用户 GitHub 登录信息。
+构建过程仅在 runner 工作目录合入 GUI2，不向上游仓库推送或修改上游 PR。
+
+## 上游项目
+
+- [TWRP-Test/platform_manifest_twrp_aosp](https://github.com/TWRP-Test/platform_manifest_twrp_aosp)
+- [GUI2 PR #31](https://github.com/TWRP-Test/android_bootable_recovery/pull/31)
+- [Sony pdx234 设备树](https://github.com/sony-sm8550-TWRP/device_sony_pdx234-TWRP)
+- [Sony sm8550-common 设备树](https://github.com/sony-sm8550-TWRP/device_sony_sm8550-common-TWRP)
