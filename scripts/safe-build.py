@@ -10,10 +10,12 @@ from pathlib import Path
 
 root = Path(os.environ["BUILD_DIR"])
 job_start_file = Path(os.environ["ARTIFACT_DIR"]) / "job-started-epoch.txt"
-job_deadline = int(job_start_file.read_text().strip()) + 330 * 60
+time_limit = int(os.environ.get("BUILD_TIME_LIMIT_MINUTES", "330" if os.environ.get("GITHUB_ACTIONS") == "true" else "0"))
+job_deadline = int(job_start_file.read_text().strip()) + time_limit * 60 if time_limit else None
 command = """set -eo pipefail
 source build/envsetup.sh
 lunch twrp_pdx234 bp2a eng
+if [ "${RUN_INSTALLCLEAN:-1}" = "1" ]; then mka installclean; fi
 mka -j"$BUILD_JOBS" recoveryimage
 """
 process = subprocess.Popen(["bash", "-c", command], cwd=root, start_new_session=True)
@@ -39,7 +41,7 @@ while process.poll() is None:
         reason = "fewer than 4 GiB remain for the runner and diagnostics"
     elif memory["MemAvailable"] < 192 * 1024**2 and memory["SwapFree"] < 512 * 1024**2:
         reason = "RAM and swap are nearly exhausted"
-    elif time.time() >= job_deadline:
+    elif job_deadline is not None and time.time() >= job_deadline:
         reason = "the job is approaching its 6-hour limit; preserving diagnostics before cancellation"
     if reason:
         print("Stopping the build safely: " + reason, flush=True)

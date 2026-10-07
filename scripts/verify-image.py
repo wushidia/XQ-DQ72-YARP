@@ -53,6 +53,41 @@ binary = bytes(payload)
 assert binary[4:6] == b"\x02\x01", "Recovery executable must be 64-bit little-endian ELF"
 assert struct.unpack_from("<H", binary, 18)[0] == 183, "Recovery executable must target AArch64"
 assert b"gui2: invalid framebuffer" in binary, "GUI2 display implementation is absent"
+# Verify the actual archive, including libraries loaded by recovery. Checking
+# only an intermediate executable missed stale ramdisk shared objects before.
+assert b"YARP final build: final-logging-v1" in binary, "Wrong recovery build"
+assert b"Decrypt input selection" in binary, "Manual credential input is absent"
+minui = bytes(entries["system/lib64/libtwrpminui.so"])
+assert b"Haptics sysfs backend" in minui, "Stale minui lacks Sony haptics fallback"
+expected_minui = Path(os.environ["BUILD_DIR"]) / "out/target/product/pdx234/system/lib64/libtwrpminui.so"
+assert minui == expected_minui.read_bytes(), "Packaged minui differs from the newly built module"
+assert b"VintfObjectRecovery" in bytes(entries["system/bin/hwservicemanager"]), "HIDL manager lacks recovery manifest support"
+services = bytes(entries["init.recovery.yarp-services.rc"])
+assert b"service keymint-qti" in services and b"service qseecomd" in services
+assert b"/init.recovery.yarp-services.rc" in bytes(entries["init.recovery.qcom.rc"])
+assert b"service keystore2 /system/bin/keystore2 /tmp/misc/keystore" in services
+assert "system/bin/android.hardware.vibrator-sony.service.cs40l25" in entries
+assert b"final-logging-v1" in bytes(entries["system/etc/yarp-build-id"])
+
+logger = bytes(entries["system/bin/yarp_bootlog"])
+expected_logger = Path(os.environ["BUILD_DIR"]) / "out/target/product/pdx234/obj/EXECUTABLES/yarp_bootlog_intermediates/yarp_bootlog"
+assert logger == expected_logger.read_bytes(), "Packaged logger differs from the newly built module"
+# Clang may fold the short settings-key comparison into immediate constants.
+assert b"twrp.yarp.logging" in logger and b"/tmp/yarp-bootlog-persist" in logger, "Logger lacks early policy"
+assert b"twrp.yarp.logging_active" in logger, "Logger lacks pause acknowledgement"
+assert b"tw_metadata_logging" in binary, "Recovery lacks persistent logging control"
+
+flags = bytes(entries["system/etc/twrp.flags"])
+assert b"/dev/block/mmcblk1p1" in flags and b"/dev/block/mmcblk0p1" not in flags, "Wrong SD device"
+persist = next(line for line in flags.splitlines() if line.startswith(b"/mnt/vendor/persist "))
+assert b"fsflags=ro" not in persist, "Settings persist remains read-only"
+assert b"/mnt/vendor/persist" in bytes(entries["system/etc/recovery.fstab"]), "Wrong persist mount"
+assert b"USB storage enable failed; keeping mount page" in binary, "Missing UMS failure handling"
+assert b"Refusing settings I/O" in binary, "Missing persistent mount guard"
+usb = bytes(entries["init.recovery.usb.rc"])
+assert b"sys.usb.config=mass_storage,adb && property:sys.usb.configfs=1" in usb, "Missing configfs UMS"
+assert b"mass_storage.0 /config/usb_gadget/g1/configs/b.1/f1" in usb, "Missing UMS gadget function"
+
 fstabs = [name for name, data in entries.items()
           if name.rsplit("/", 1)[-1] == "recovery.fstab" and len(data) > 0]
 assert fstabs, "Recovery fstab is absent"

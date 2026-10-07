@@ -1,0 +1,14 @@
+type yarp_bootlog_file, file_type;
+
+recovery_only(`
+  # Only the named diagnostics subtree is given the writable log type.
+  allow recovery metadata_file:dir { search getattr write add_name };
+  type_transition recovery metadata_file:dir yarp_bootlog_file "XQ-DQ72-YARP";
+  type_transition recovery yarp_bootlog_file:dir yarp_bootlog_file;
+  type_transition recovery yarp_bootlog_file:file yarp_bootlog_file;
+  allow recovery yarp_bootlog_file:dir create_dir_perms;
+  allow recovery yarp_bootlog_file:file { create_file_perms lock };
+  r_dir_file(recovery, pstorefs)
+  allow recovery logcat_exec:file { rx_file_perms execute_no_trans };
+  read_logd(recovery)
+')

@@ -1,0 +1,32 @@
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 7e6262d..e84ad78 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -41,0 +42,2 @@ TW_SUPPORT_INPUT_AIDL_HAPTICS := true
++
++BOARD_SEPOLICY_DIRS += device/sony/pdx234/sepolicy
+diff --git a/device-pdx234.mk b/device-pdx234.mk
+index 0c85833..62ca5e5 100644
+--- a/device-pdx234.mk
++++ b/device-pdx234.mk
+@@ -26,0 +27,2 @@ TARGET_RECOVERY_DEVICE_DIRS += $(DEVICE_PATH)/twrp
++
++PRODUCT_PACKAGES += yarp_bootlog
+diff --git a/twrp.dependencies b/twrp.dependencies
+index 0903d51..fd3cb9d 100644
+--- a/twrp.dependencies
++++ b/twrp.dependencies
+@@ -3,3 +3,3 @@
+-    "remote": "TeamWin",
+-    "repository": "android_device_onrplus_sm85xx-common",
+-    "target_path": "device/oneplus/sm85xx-common",
++    "remote": "sony-sm8550",
++    "repository": "device_sony_sm8550-common-TWRP",
++    "target_path": "device/sony/sm8550-common",
+diff --git a/twrp_pdx234.mk b/twrp_pdx234.mk
+index ad543b8..a377042 100644
+--- a/twrp_pdx234.mk
++++ b/twrp_pdx234.mk
+@@ -41 +41 @@ $(call inherit-product, vendor/$(CUSTOM_VENDOR)/config/common.mk)
+-BOARD_VENDOR := $(or $(word 2,$(subst /, ,$(firstword $(MAKEFILE_LIST)))),$(value 2))
++BOARD_VENDOR := sony

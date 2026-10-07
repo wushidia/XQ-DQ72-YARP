@@ -1,0 +1,32 @@
+{
+  "LineageOS": {
+    "scheme": "https",
+    "host": "github.com",
+    "path": "/LineageOS"
+  },
+  "aosp": {
+    "scheme": "https",
+    "host": "android.googlesource.com",
+    "path": ""
+  },
+  "github": {
+    "scheme": "https",
+    "host": "github.com",
+    "path": ""
+  },
+  "lineage-qcom": {
+    "scheme": "https",
+    "host": "github.com",
+    "path": "/LineageOS"
+  },
+  "sony-sm8550": {
+    "scheme": "https",
+    "host": "github.com",
+    "path": "/sony-sm8550-TWRP"
+  },
+  "twrp-16.0": {
+    "scheme": "https",
+    "host": "github.com",
+    "path": "/TWRP-Test"
+  }
+}

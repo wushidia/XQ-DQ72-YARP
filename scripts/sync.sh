@@ -20,11 +20,12 @@ sync_phase() {
 case "$phase" in
   metadata)
     exec > >(tee "$ARTIFACT_DIR/sync.log") 2>&1
-    repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" --depth=1 --no-clone-bundle \
+    repo init -u "$MANIFEST_URL" -b "$MANIFEST_SHA" --depth=1 --no-clone-bundle \
       --partial-clone --clone-filter=blob:none
     test "$(git -C .repo/manifests rev-parse HEAD)" = "$MANIFEST_SHA"
-    mkdir -p .repo/local_manifests
-    cp "$GITHUB_WORKSPACE/manifests/sony.xml" .repo/local_manifests/sony.xml
+    # The resolved manifest pins all platform and Sony dependencies.
+    python3 "$GITHUB_WORKSPACE/scripts/materialize-manifest.py" "$BUILD_DIR/.repo/manifests/default.xml"
+    rm -f .repo/local_manifests/sony.xml
     git -C .repo/manifests config --get-regexp 'repo.(depth|clonefilter|partialclone)'
     sync_phase --network-only
     ;;

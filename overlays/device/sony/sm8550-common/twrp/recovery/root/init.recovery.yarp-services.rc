@@ -1,0 +1,154 @@
+# YARP logs4 services: parsed from recovery hardware init, independent of vendor mounts.
+on init
+    setprop twrp.yarp.services_config logs4-v1
+    setprop hwservicemanager.disabled false
+
+on property:twrp.modules.loaded=true
+    start qseecomd
+    start gatekeeper-qti
+
+service qseecomd /system/bin/qseecomd
+    class early_hal
+    user root
+    group root system drmrpc
+    disabled
+    seclabel u:r:recovery:s0
+    setenv LD_LIBRARY_PATH /vendor/lib64/:/vendor/lib64/hw/:/system/lib64/
+
+service gatekeeper-qti /system/bin/android.hardware.gatekeeper@1.0-service-qti
+    class early_hal
+    interface android.hardware.gatekeeper@1.0::IGatekeeper default
+    user root
+    group root system drmrpc
+    disabled
+    seclabel u:r:recovery:s0
+    setenv LD_LIBRARY_PATH /vendor/lib64/:/vendor/lib64/hw/:/system/lib64/
+
+# Copyright (c) 2021 Qualcomm Technologies, Inc.
+# All Rights Reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+# Recovery loads the QSEE/HWKM kernel modules itself and does not run the
+# Android vendor listener daemon which sets vendor.sys.listeners.registered.
+on property:twrp.modules.loaded=true
+    start keymint-qti
+
+# Keep keystore2 on tmpfs and start it only after the hardware service starts.
+# It may retry if KeyMint has not registered its Binder interfaces yet.
+on property:init.svc.keymint-qti=running
+    start keystore2
+
+service keymint-qti /system/bin/android.hardware.security.keymint-service-qti
+    class early_hal
+    interface aidl android.hardware.security.keymint.IKeyMintDevice/default
+    interface aidl android.hardware.security.keymint.IRemotelyProvisionedComponent/default
+    interface aidl android.hardware.security.secureclock.ISecureClock/default
+    interface aidl android.hardware.security.sharedsecret.ISharedSecret/default
+    user root
+    group root
+    setenv LD_LIBRARY_PATH /vendor/lib64/:/vendor/lib/:/system/lib64/:/system/lib/:/sbin/
+    disabled
+    seclabel u:r:recovery:s0
+
+# Start the keystore2 service.
+# Keystore 2.0 changes its working directory to the first positional
+# command line option, i.e., /data/misc/keystore, where it stores its
+# database.
+# Keystore shall run as user keystore and groups keystore, readproc, and log.
+#
+# See system/core/init/README.md for information on the init.rc language.
+
+# Device init starts this after its KeyMint HAL is available. A missing HAL
+# must report a decrypt failure, rather than rebooting recovery to bootloader.
+
+service keystore2 /system/bin/keystore2 /tmp/misc/keystore
+    class early_hal
+    disabled
+    user root
+    group keystore readproc log
+    task_profiles ProcessCapacityHigh
+    # The default memlock limit of 65536 bytes is too low for keystore.
+    rlimit memlock unlimited unlimited
+    seclabel u:r:recovery:s0
+
+on property:twrp.modules.loaded=true
+    wait /sys/class/leds/cs40l25:vibrator/device 2
+
+    mkdir /mnt/vendor/persist/haptics 0770 system system
+    chmod 770 /mnt/vendor/persist/haptics
+    chmod 440 /mnt/vendor/persist/haptics/cs40l25a.cal
+    chown system system /mnt/vendor/persist/haptics
+    chown system system /mnt/vendor/persist/haptics/cs40l25a.cal
+
+    chown system system /sys/class/leds/cs40l25:vibrator/activate
+    chown system system /sys/class/leds/cs40l25:vibrator/brightness
+    chown system system /sys/class/leds/cs40l25:vibrator/duration
+    chown system system /sys/class/leds/cs40l25:vibrator/state
+
+    chown system system /sys/class/leds/cs40l25:vibrator/device/asp_enable
+    chown system system /sys/class/leds/cs40l25:vibrator/device/available_pwle_segments
+    chown system system /sys/class/leds/cs40l25:vibrator/device/clab_enable
+    chown system system /sys/class/leds/cs40l25:vibrator/device/comp_enable
+    chown system system /sys/class/leds/cs40l25:vibrator/device/cp_dig_scale
+    chown system system /sys/class/leds/cs40l25:vibrator/device/cp_trigger_duration
+    chown system system /sys/class/leds/cs40l25:vibrator/device/cp_trigger_index
+    chown system system /sys/class/leds/cs40l25:vibrator/device/cp_trigger_q_sub
+    chown system system /sys/class/leds/cs40l25:vibrator/device/cp_trigger_queue
+    chown system system /sys/class/leds/cs40l25:vibrator/device/dig_scale
+    chown system system /sys/class/leds/cs40l25:vibrator/device/exc_enable
+    chown system system /sys/class/leds/cs40l25:vibrator/device/f0_stored
+    chown system system /sys/class/leds/cs40l25:vibrator/device/f0_offset
+    chown system system /sys/class/leds/cs40l25:vibrator/device/fw_rev
+    chown system system /sys/class/leds/cs40l25:vibrator/device/gpio1_fall_dig_scale
+    chown system system /sys/class/leds/cs40l25:vibrator/device/gpio1_fall_index
+    chown system system /sys/class/leds/cs40l25:vibrator/device/gpio1_rise_dig_scale
+    chown system system /sys/class/leds/cs40l25:vibrator/device/gpio1_rise_index
+    chown system system /sys/class/leds/cs40l25:vibrator/device/heartbeat
+    chown system system /sys/class/leds/cs40l25:vibrator/device/hw_reset
+    chown system system /sys/class/leds/cs40l25:vibrator/device/num_waves
+    chown system system /sys/class/leds/cs40l25:vibrator/device/pwle
+    chown system system /sys/class/leds/cs40l25:vibrator/device/pwle_ramp_down
+    chown system system /sys/class/leds/cs40l25:vibrator/device/q_stored
+    chown system system /sys/class/leds/cs40l25:vibrator/device/redc_comp_enable
+    chown system system /sys/class/leds/cs40l25:vibrator/device/redc_stored
+    chown system system /sys/class/leds/cs40l25:vibrator/device/standby_timeout
+    chown system system /sys/class/leds/cs40l25:vibrator/device/vbatt_max
+    chown system system /sys/class/leds/cs40l25:vibrator/device/vbatt_min
+    chown system system /sys/class/leds/cs40l25:vibrator/device/vibe_state
+
+    enable vendor.vibrator.cs40l25
+    setprop twrp.yarp.haptics_init done
+
+service vendor.vibrator.cs40l25 /system/bin/android.hardware.vibrator-sony.service.cs40l25
+    class hal
+    user root
+    group root
+    seclabel u:r:recovery:s0
+    setenv LD_LIBRARY_PATH /vendor/lib64/hw/:/vendor/lib64/:/system/lib64/
+
+    setenv PROPERTY_PREFIX ro.vendor.vibrator.hal.
+    setenv CALIBRATION_FILEPATH /mnt/vendor/persist/haptics/cs40l25a.cal
+
+    setenv HWAPI_PATH_PREFIX /sys/class/leds/cs40l25:vibrator/
+    setenv HWAPI_DEBUG_PATHS "
+        device/asp_enable
+        device/available_pwle_segments
+        device/clab_enable
+        device/f0_stored
+        device/f0_offset
+        device/fw_rev
+        device/gpio1_fall_dig_scale
+        device/gpio1_fall_index
+        device/gpio1_rise_dig_scale
+        device/gpio1_rise_index
+        device/heartbeat
+        device/num_waves
+        device/pwle
+        device/pwle_ramp_down
+        device/q_stored
+        device/redc_stored
+        device/vibe_state
+        state
+        "
+
+    disabled

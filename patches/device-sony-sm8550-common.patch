@@ -1,0 +1,37 @@
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index a779085..69af8b5 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -27 +27 @@
+-BOARD_SYSTEMSDK_VERSIONS := 31
++BOARD_SYSTEMSDK_VERSIONS := $(PLATFORM_SDK_VERSION)
+@@ -144 +143,0 @@ PLATFORM_VERSION := 99.87.36
+-PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
+diff --git a/device-common.mk b/device-common.mk
+index a844c3b..3f403b1 100644
+--- a/device-common.mk
++++ b/device-common.mk
+@@ -31 +31 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
+-$(call inherit-product, $(SRC_TARGET_DIR)/product/gsi_keys.mk)
++$(call inherit-product-if-exists, $(SRC_TARGET_DIR)/product/gsi_keys.mk)
+@@ -60,2 +59,0 @@ PRODUCT_PACKAGES += update_engine \
+-    android.hardware.boot@1.2-impl-qti \
+-    android.hardware.boot@1.2-impl-qti.recovery \
+@@ -85 +82,0 @@ BOARD_SHIPPING_API_LEVEL := 31
+-BOARD_API_LEVEL := 31
+@@ -102,3 +99 @@ PRODUCT_PACKAGES += android.hardware.fastboot@1.1-impl-mock
+-PRODUCT_PACKAGES += \
+-    qcom_decrypt \
+-    qcom_decrypt_fbe
++# Decryption is supplied by TW_INCLUDE_CRYPTO in recovery/vold.
+@@ -107,2 +102 @@ PRODUCT_PACKAGES += \
+-PRODUCT_SOONG_NAMESPACES += \
+-    $(COMMON_PATH)
++
+diff --git a/recovery.fstab b/recovery.fstab
+index 59cd5dd..eab4556 100644
+--- a/recovery.fstab
++++ b/recovery.fstab
+@@ -51 +51 @@ odm                                                     /odm                   e
+-/dev/block/bootdevice/by-name/persist                   /persist    ext4    noatime,nosuid,nodev,barrier=1                       wait
++/dev/block/bootdevice/by-name/persist                   /mnt/vendor/persist    ext4    noatime,nosuid,nodev,barrier=1                       wait

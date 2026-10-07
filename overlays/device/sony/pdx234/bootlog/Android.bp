@@ -1,0 +1,7 @@
+cc_binary {
+    name: "yarp_bootlog",
+    srcs: ["yarp_bootlog.c"],
+    recovery: true,
+    static_executable: true,
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

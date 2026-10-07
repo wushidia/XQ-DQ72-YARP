@@ -1,0 +1,176 @@
+diff --git a/Decrypt.cpp b/Decrypt.cpp
+index a5a5ab5..4645a43 100755
+--- a/Decrypt.cpp
++++ b/Decrypt.cpp
+@@ -322,25 +322,40 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-	// output_hex(pwd_data.data(), pwd_data.size());printf("\n");
+-	const int* intptr = (const int*)pwd_data.data();
+-	pwd->password_type = *intptr;
+-	endianswap(&pwd->password_type);
+-	//printf("password type %i\n", pwd->password_type); // 2 was PIN, 1 for pattern, 2 also for password, -1 for default password
+-	const unsigned char* byteptr = (const unsigned char*)pwd_data.data() + sizeof(int);
+-	pwd->scryptN = *byteptr;
+-	byteptr++;
+-	pwd->scryptR = *byteptr;
+-	byteptr++;
+-	pwd->scryptP = *byteptr;
+-	byteptr++;
+-	intptr = (const int*)byteptr;
+-	pwd->salt_len = *intptr;
+-	endianswap(&pwd->salt_len);
+-	if (pwd->salt_len != 0) {
+-		pwd->salt = malloc(pwd->salt_len);
+-		if (!pwd->salt) {
+-			printf("Get_Password_Data malloc salt\n");
+-			return false;
+-		}
+-		memcpy(pwd->salt, intptr + 1, pwd->salt_len);
+-		intptr++;
+-		byteptr = (const unsigned char*)intptr;
+-		byteptr += pwd->salt_len;
++	if (pwd == nullptr)
++		return false;
++
++	/* PasswordData is serialized by Java's big-endian ByteBuffer. Do not
++	 * cast the byte string to int: besides permitting unaligned accesses,
++	 * that made malformed or newer files look like a different credential. */
++	pwd->password_type = 0;
++	pwd->scryptN = 0;
++	pwd->scryptR = 0;
++	pwd->scryptP = 0;
++	pwd->salt_len = 0;
++	pwd->salt = nullptr;
++	pwd->handle_len = 0;
++	pwd->password_handle = nullptr;
++
++	const size_t kCredentialTypeOffset = 0;
++	const size_t kScryptOffset = sizeof(uint32_t);
++	const size_t kSaltLengthOffset = kScryptOffset + 3;
++	if (pwd_data.size() < kSaltLengthOffset + sizeof(uint32_t)) {
++		printf("Get_Password_Data: truncated password data (%zu bytes)\n", pwd_data.size());
++		return false;
++	}
++	auto read_be16 = [&pwd_data](size_t offset) -> uint16_t {
++		return (static_cast<uint16_t>(static_cast<unsigned char>(pwd_data[offset])) << 8) |
++		       static_cast<uint16_t>(static_cast<unsigned char>(pwd_data[offset + 1]));
++	};
++	auto read_be32 = [&pwd_data](size_t offset) -> uint32_t {
++		return (static_cast<uint32_t>(static_cast<unsigned char>(pwd_data[offset])) << 24) |
++		       (static_cast<uint32_t>(static_cast<unsigned char>(pwd_data[offset + 1])) << 16) |
++		       (static_cast<uint32_t>(static_cast<unsigned char>(pwd_data[offset + 2])) << 8) |
++		       static_cast<uint32_t>(static_cast<unsigned char>(pwd_data[offset + 3]));
++	};
++
++	/* Android 14 beta briefly prefixed the credential type with a two-byte
++	 * format version. The released format kept the original four-byte slot;
++	 * both formats therefore have the same offsets after the type. */
++	if (static_cast<unsigned char>(pwd_data[0]) == 0 &&
++		static_cast<unsigned char>(pwd_data[1]) == 2) {
++		pwd->password_type = static_cast<int>(read_be16(kCredentialTypeOffset + 2));
++		printf("PasswordData beta format, credential type: %d\n", pwd->password_type);
+@@ -348 +363,19 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-		printf("Get_Password_Data salt_len is 0\n");
++		pwd->password_type = static_cast<int32_t>(read_be32(kCredentialTypeOffset));
++		printf("PasswordData credential type: %d\n", pwd->password_type);
++	}
++
++	pwd->scryptN = static_cast<unsigned char>(pwd_data[kScryptOffset]);
++	pwd->scryptR = static_cast<unsigned char>(pwd_data[kScryptOffset + 1]);
++	pwd->scryptP = static_cast<unsigned char>(pwd_data[kScryptOffset + 2]);
++
++	size_t offset = kSaltLengthOffset;
++	const uint32_t salt_len = read_be32(offset);
++	offset += sizeof(uint32_t);
++	if (salt_len == 0 || salt_len > pwd_data.size() - offset) {
++		printf("Get_Password_Data: invalid salt length %u\n", salt_len);
++		return false;
++	}
++	const size_t salt_offset = offset;
++	offset += salt_len;
++	if (pwd_data.size() - offset < sizeof(uint32_t)) {
++		printf("Get_Password_Data: missing password handle length\n");
+@@ -351,5 +384,18 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-	intptr = (const int*)byteptr;
+-	pwd->handle_len = *intptr;
+-	endianswap(&pwd->handle_len);
+-	if (pwd->handle_len != 0) {
+-		pwd->password_handle = malloc(pwd->handle_len);
++	const uint32_t handle_len = read_be32(offset);
++	offset += sizeof(uint32_t);
++	if (handle_len > pwd_data.size() - offset) {
++		printf("Get_Password_Data: invalid password handle length %u\n", handle_len);
++		return false;
++	}
++
++	pwd->salt_len = static_cast<int>(salt_len);
++	pwd->salt = malloc(salt_len);
++	if (!pwd->salt) {
++		printf("Get_Password_Data malloc salt\n");
++		return false;
++	}
++	memcpy(pwd->salt, pwd_data.data() + salt_offset, salt_len);
++
++	pwd->handle_len = static_cast<int>(handle_len);
++	if (handle_len != 0) {
++		pwd->password_handle = malloc(handle_len);
+@@ -357,0 +404,3 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
++			free(pwd->salt);
++			pwd->salt = nullptr;
++			pwd->salt_len = 0;
+@@ -360 +409 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-		memcpy(pwd->password_handle, intptr + 1, pwd->handle_len);
++		memcpy(pwd->password_handle, pwd_data.data() + offset, handle_len);
+@@ -363 +412 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-		// Not an error if using weaver
++		// Not an error if using weaver.
+@@ -367 +415,0 @@ bool Get_Password_Data(const std::string& spblob_path, const std::string& handle
+-
+@@ -1031 +1079 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-		password_data_struct pwd;
++		password_data_struct pwd{};
+@@ -1036,3 +1084,4 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-		// In Android type 1 is pattern
+-		// In Android <11 type 2 is PIN or password
+-		// In Android 11+ type 3 is PIN and type 4 is password
++		/* Android's credential type is read from PasswordData above. Map that
++		 * device-provided value to TWRP's input widget; never infer the type from
++		 * the text entered by the user. */
++		int twrp_type = 0;
+@@ -1041 +1090 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-			return 1; // In TWRP this means password or PIN (Android <11)
++			twrp_type = 1; // Android <11 password-or-PIN
+@@ -1044 +1093 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-			return 1; // In TWRP this means password
++			twrp_type = 1;
+@@ -1047 +1096 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-			return 2; // In TWRP this means pattern
++			twrp_type = 2;
+@@ -1050 +1099,3 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-			return 3; // In TWRP this means PIN
++			twrp_type = 3;
++		} else {
++			printf("unknown Android credential type %d; using default password\n", pwd.password_type);
+@@ -1052,2 +1103,3 @@ extern "C" int Get_Password_Type(const userid_t user_id, std::string& filename)
+-		printf("using default password\n");
+-		return 0; // We'll try the default password
++		free(pwd.salt);
++		free(pwd.password_handle);
++		return twrp_type;
+diff --git a/Keystore.cpp b/Keystore.cpp
+index 24b78ef..6afcc71 100644
+--- a/Keystore.cpp
++++ b/Keystore.cpp
+@@ -19,0 +20 @@
++#include <cstdio>
+@@ -58,0 +60,2 @@ static bool logKeystore2ExceptionIfPresent(::ndk::ScopedAStatus& rc, const std::
++    printf("Decrypt keystore operation %s failed: exception=%d service_error=%d\n",
++           func_name.c_str(), rc.getExceptionCode(), rc.getServiceSpecificError());
+@@ -117,0 +121 @@ static ::ndk::SpAIBinder waitForService(const char* name) {
++    printf("Decrypt service unavailable after 30 seconds: %s\n", name);
+diff --git a/KeystoreInfo.cpp b/KeystoreInfo.cpp
+index 04a6811..f018659 100755
+--- a/KeystoreInfo.cpp
++++ b/KeystoreInfo.cpp
+@@ -53 +53 @@ std::string KeystoreInfo::getHandle(const userid_t user_id) {
+-	rc = sqlite3_open("/data/system/locksettings.db", &db);
++	rc = sqlite3_open_v2("/data/system/locksettings.db", &db, SQLITE_OPEN_READONLY, NULL);

@@ -10,29 +10,25 @@ if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
 fi
 git fetch --no-tags "$remote_name" "$GUI2_PR_HEAD"
 test "$(git rev-parse FETCH_HEAD)" = "$GUI2_PR_HEAD"
-git merge --no-ff --no-edit FETCH_HEAD
+git -c user.name="Recovery Builder" -c user.email=builder@localhost merge --no-ff --no-edit FETCH_HEAD
 git merge-base --is-ancestor "$RECOVERY_BASE_SHA" HEAD
 git merge-base --is-ancestor "$GUI2_PR_HEAD" HEAD
-git diff --check
+python3 "$GITHUB_WORKSPACE/scripts/apply-customizations.py"
 python3 "$GITHUB_WORKSPACE/scripts/prepare-device.py"
-git -C "$BUILD_DIR/device/sony/pdx234" diff --check
-git -C "$BUILD_DIR/device/sony/sm8550-common" diff --check
-git -C "$BUILD_DIR/device/sony/pdx234" diff > "$ARTIFACT_DIR/pdx234.patch"
-git -C "$BUILD_DIR/device/sony/sm8550-common" diff > "$ARTIFACT_DIR/sm8550-common.patch"
+for project in bootable/recovery device/sony/pdx234 device/sony/sm8550-common system/hwservicemanager system/libbase system/vold; do
+  git -C "$BUILD_DIR/$project" diff --check
+done
 {
   echo "Device: Sony Xperia 1 V / XQ-DQ72 / pdx234"
+  echo "Release: final-logging-v1"
   echo "Build target: recoveryimage"
   echo "Build configuration commit: $GITHUB_SHA"
-  echo "Manifest branch: $MANIFEST_BRANCH"
   echo "Manifest commit: $MANIFEST_SHA"
   echo "Recovery base: $RECOVERY_BASE_SHA"
-  echo "GUI2 PR: https://github.com/TWRP-Test/android_bootable_recovery/pull/31"
+  echo "GUI2 PR: TWRP-Test/android_bootable_recovery#31"
   echo "GUI2 PR head: $GUI2_PR_HEAD"
   echo "Merged recovery commit: $(git rev-parse HEAD)"
-  echo "Device tree: $DEVICE_SHA"
-  echo "SM8550 common tree: $COMMON_SHA"
-  echo "LVGL: $LVGL_SHA"
-  echo "Qualcomm display interfaces: $QCOM_INTERFACES_SHA"
-  echo "Action: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+  echo "Release patch series: $(sha256sum "$GITHUB_WORKSPACE/patches/series.json" | cut -d ' ' -f 1)"
+  echo "GitHub Actions run: $GITHUB_REPOSITORY $GITHUB_RUN_ID"
   echo "UTC time: $(date -u +%FT%TZ)"
 } | tee "$ARTIFACT_DIR/build-info.txt"

@@ -1,0 +1,359 @@
+{
+  "version": 1,
+  "build_id": "final-logging-v1",
+  "projects": [
+    {
+      "path": "bootable/recovery",
+      "base_tree": "496c224a60f801a73d91ef6f4f201f40f1a2e673",
+      "patch": "patches/bootable-recovery.patch",
+      "patch_sha256": "73c6133e99b5d62b64a29dd5a383a069b51fa9b0ef1a6a944397dbaaf72761ef",
+      "merge_parents": [
+        "d7b1a5fd593aec9af096f1a26d5a91bf3f12ee97",
+        "2251eb12dee7823e05dbb1b8adf7166420fecbdb"
+      ],
+      "expected_source_hashes": [
+        {
+          "path": [
+            "data.cpp"
+          ],
+          "sha256": "7d562851bf963b4e7e9d81e847278532318889a35d57dfe22e52f9351f52699b"
+        },
+        {
+          "path": [
+            "etc",
+            "Android.bp"
+          ],
+          "sha256": "d6d5b7a9acca0c8993524eac71da6e4f468418156554c48027fc8d5e2c5a50ae"
+        },
+        {
+          "path": [
+            "etc",
+            "init.rc"
+          ],
+          "sha256": "06632503966a817c6718dbdc9a3637086bfd89358f0da9fe06b1692c9c86b8de"
+        },
+        {
+          "path": [
+            "etc",
+            "init",
+            "keystore2.rc"
+          ],
+          "sha256": "823e902c8d0ad8616a0947d4af8abfa626d98e3101b0ff3890caf48c2ade5cf4"
+        },
+        {
+          "path": [
+            "gui2",
+            "backend",
+            "decrypt_backend.h"
+          ],
+          "sha256": "36a0ad56d188496f28a5fe757d4488492fcc667f5d058efb5d57ab929e244a0b"
+        },
+        {
+          "path": [
+            "gui2",
+            "backend",
+            "twrp_decrypt_backend.cpp"
+          ],
+          "sha256": "cbe89a997a5a698a5940c71974aa642d93dc7de494499432fc89b9adea860853"
+        },
+        {
+          "path": [
+            "gui2",
+            "backend",
+            "twrp_decrypt_backend.h"
+          ],
+          "sha256": "27ac7507a196573b1e471d60569ae20649593a977d0753565616f76dcddcc7c6"
+        },
+        {
+          "path": [
+            "gui2",
+            "backend",
+            "twrp_mount_backend.cpp"
+          ],
+          "sha256": "2c2d5e0440448442fac7f945773eb9f14c6b470a353070fea3a2ff5451dd6a8a"
+        },
+        {
+          "path": [
+            "gui2",
+            "backend",
+            "twrp_settings_store.cpp"
+          ],
+          "sha256": "8ecaa777e73f1f1e4edc875ed1b1206ca984157aeeeea81bf9f72bfa62a5aac2"
+        },
+        {
+          "path": [
+            "gui2",
+            "gui2.cpp"
+          ],
+          "sha256": "930a370b8f5af15a31aaaf57d88751b37a2f86c2e454519ce6e11c03fab19388"
+        },
+        {
+          "path": [
+            "gui2",
+            "i18n",
+            "en.cpp"
+          ],
+          "sha256": "854f22da6d8cd57389690c7b2994f4df7e7a066ee40e1eaf79dfeac62d2215ea"
+        },
+        {
+          "path": [
+            "gui2",
+            "i18n",
+            "i18n.h"
+          ],
+          "sha256": "d5ab45c6b80abf4d85fef3a567d49db5fd3e6f2c777203242700c01f18fe2185"
+        },
+        {
+          "path": [
+            "gui2",
+            "i18n",
+            "zh_cn.cpp"
+          ],
+          "sha256": "5f242528f9b09b95e1e2a78f3df10b1560bc54fd19bfc578734ad6d46179761e"
+        },
+        {
+          "path": [
+            "gui2",
+            "i18n",
+            "zh_tw.cpp"
+          ],
+          "sha256": "beeeeeb29c007d7dab1db31dd856f8db9319407ad8a52e9f9d35fc960e478a78"
+        },
+        {
+          "path": [
+            "gui2",
+            "pages",
+            "decrypt_page.cpp"
+          ],
+          "sha256": "e1e22791f2fc10cbf56a935c8d0460557fe90ead55394ef71d25ba0120f0769a"
+        },
+        {
+          "path": [
+            "gui2",
+            "pages",
+            "decrypt_page.h"
+          ],
+          "sha256": "c17a504daa8408e9e36423ab5e5079dea670f142298f564d88cfed470875cffc"
+        },
+        {
+          "path": [
+            "gui2",
+            "pages",
+            "tool_pages.cpp"
+          ],
+          "sha256": "dc81213a46219fbeb8f9236b462b8ae2eed438b70d5505c81a16bec08fd0ead0"
+        },
+        {
+          "path": [
+            "gui2",
+            "pages",
+            "tool_pages.h"
+          ],
+          "sha256": "a1b468cc44d4b22a660f7e20016a4b041b910937acb2a457c6cbfe3205dedc86"
+        },
+        {
+          "path": [
+            "infomanager.cpp"
+          ],
+          "sha256": "e00b23d0682336a9ec7e6ef61fae89347f7c11e4037708c9b203a634c0535a5e"
+        },
+        {
+          "path": [
+            "partition.cpp"
+          ],
+          "sha256": "3e5ecc3b5e6e0bea0ea833ee85b5a18c9501916ff4db2f3e044fea3f86d1d09e"
+        },
+        {
+          "path": [
+            "partitionmanager.cpp"
+          ],
+          "sha256": "9a8a42c9b8f0c9cc4764202f042b4ba5602f78c227c6a970f1bd109d66a3addf"
+        },
+        {
+          "path": [
+            "twrp-functions.cpp"
+          ],
+          "sha256": "bb5ee4caab046c9506dee4263a78420071ac396f85f4deb6bf2df0608d2d60d5"
+        },
+        {
+          "path": [
+            "twrp.cpp"
+          ],
+          "sha256": "df0e36147067da54f9b4e49f9d2d924e518da1154d665eacfefda45762fd9ae6"
+        },
+        {
+          "path": [
+            "twrp_recovery_defaults.go"
+          ],
+          "sha256": "e25e9d5c2bd5127efcea64dbef68821303360972e5cadb54d508cf633c55a748"
+        },
+        {
+          "path": [
+            "twrpminui",
+            "events.cpp"
+          ],
+          "sha256": "d1288bb52c36db8782e9eaa43c3337832bfa3871464ed916d2080e2bb6915037"
+        },
+        {
+          "path": [
+            "twrpminui",
+            "graphics_drm.cpp"
+          ],
+          "sha256": "cf4ea3a2baf4f864b35d7a089acb77564cbb5b88ceeefdb1220863e941e3f288"
+        }
+      ]
+    },
+    {
+      "path": "device/sony/pdx234",
+      "base_tree": "a8731fd8ac59985ca24b33c1155fd45d8801f46c",
+      "patch": "patches/device-sony-pdx234.patch",
+      "patch_sha256": "02cb98edf489d27601ba2626b63b2085097f985c5054a5211b1b88be8f66d3b2",
+      "revision": "71ef107e224a8e3aca1ee46f5e9d1b9ef9a8d471",
+      "expected_source_hashes": [
+        {
+          "path": [
+            "BoardConfig.mk"
+          ],
+          "sha256": "85b1655c62708a7ab6cd303ecc953709959868eb3cdcfaee2895c1c63a19c632"
+        },
+        {
+          "path": [
+            "device-pdx234.mk"
+          ],
+          "sha256": "1c08aa65cbb228d4f02013c17cae778b1ef2aa4c1dc42836ca4db973f16b5110"
+        },
+        {
+          "path": [
+            "twrp.dependencies"
+          ],
+          "sha256": "e1ce7cd92f0c4d9536fbb55d4accd2b07d9b58a9d08c698874811b5f34e45a87"
+        },
+        {
+          "path": [
+            "twrp_pdx234.mk"
+          ],
+          "sha256": "18f0a186072d46d37d1701cd874507daf359711740695cda265c8db13012f944"
+        }
+      ]
+    },
+    {
+      "path": "device/sony/sm8550-common",
+      "base_tree": "1da9d8525a67a1138627bd17b446f43fe332f86f",
+      "patch": "patches/device-sony-sm8550-common.patch",
+      "patch_sha256": "c891c0ed4de6daa13454b069cfc3ce7fb2fc5807adbdf6680b8e11b6351e4ca5",
+      "revision": "c8b46a320de571a20c644013aec6fcc8e0b9f1f2",
+      "expected_source_hashes": [
+        {
+          "path": [
+            "BoardConfigCommon.mk"
+          ],
+          "sha256": "d2c373beba952c0aafe4800d7af4d93078a128fdaa5f805eb5322bd62d27a577"
+        },
+        {
+          "path": [
+            "device-common.mk"
+          ],
+          "sha256": "61317dc7b2c4bbe80e1b143d08763c710964e31b0545488fbf17ce4dee530ca5"
+        },
+        {
+          "path": [
+            "recovery.fstab"
+          ],
+          "sha256": "c927a0feaa9e5292034099d1b2b837e114b4d95570fc2ce57fba1d9dac1e6dc0"
+        }
+      ]
+    },
+    {
+      "path": "system/hwservicemanager",
+      "base_tree": "dd698c47de5c68e6305c0fce9831fdd1cdc679a3",
+      "patch": "patches/system-hwservicemanager.patch",
+      "patch_sha256": "f279599ae24caab57b2762461ca4fa72c006b64daab35954c4e10d10fc686d1f",
+      "revision": "ffd89904befa58cabb0813f11a414070f55f6a92",
+      "expected_source_hashes": [
+        {
+          "path": [
+            "Android.bp"
+          ],
+          "sha256": "90517a64106bec0380abb50e410a31f37d87313e8b0f9e4017760ca99f20ef6f"
+        },
+        {
+          "path": [
+            "Vintf.cpp"
+          ],
+          "sha256": "82291f52b03cabf4ef744b9c1dd3ca911486809b6cec1932753553285736d470"
+        }
+      ]
+    },
+    {
+      "path": "system/libbase",
+      "base_tree": "9358979d34b763e206b47c370e2ad08fd29190e0",
+      "patch": "patches/system-libbase.patch",
+      "patch_sha256": "a170ec42435bb763d2d3b701aa0bfa43d7c972acce6dbc76773dc0b7576d70c1",
+      "revision": "0ac7ea4a65d981166d6e5617e1e4ef0572f774e5",
+      "expected_source_hashes": [
+        {
+          "path": [
+            "strings.cpp"
+          ],
+          "sha256": "f77fe1e51b09912129d10c0ef1d0ae06a51e5c49dd236dc5c95bb16f5476b2da"
+        }
+      ]
+    },
+    {
+      "path": "system/vold",
+      "base_tree": "7ed8a9dad850fa6c30ee325f3840dad1f066935f",
+      "patch": "patches/system-vold.patch",
+      "patch_sha256": "94440bb50066f6dd05e516a11f2093223662e65c2b9bfd87cdea744bfd923335",
+      "revision": "4c83041ec61f9b482085685f1e6aed5a62f103aa",
+      "expected_source_hashes": [
+        {
+          "path": [
+            "Decrypt.cpp"
+          ],
+          "sha256": "203c3f6280a368e80591f3e87618b2fd28bc052276daecc17c6e4a97f9897314"
+        },
+        {
+          "path": [
+            "Keystore.cpp"
+          ],
+          "sha256": "4dcff08fd83c68563e5e23f905181e09c0d28bc0e6a4c8f9b9f75e4ed48edbeb"
+        },
+        {
+          "path": [
+            "KeystoreInfo.cpp"
+          ],
+          "sha256": "71d51134dc19db0922d2d8d47e86c36f87e8efb5f5a670f73eafd75bd71fddff"
+        }
+      ]
+    }
+  ],
+  "copy_upstream_files": [
+    {
+      "source": [
+        "device",
+        "sony",
+        "pdx234",
+        "twrp",
+        "recovery",
+        "root",
+        "vendor",
+        "bin",
+        "hw",
+        "android.hardware.vibrator-sony.service.cs40l25"
+      ],
+      "target": [
+        "device",
+        "sony",
+        "pdx234",
+        "twrp",
+        "recovery",
+        "root",
+        "system",
+        "bin",
+        "android.hardware.vibrator-sony.service.cs40l25"
+      ],
+      "sha256": "81b88c8c1e51ff822d5b0da08257af2530c30598c303700c47aa06dace42e4ef"
+    }
+  ],
+  "unified_context": 0
+}

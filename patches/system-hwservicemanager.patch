@@ -1,0 +1,37 @@
+diff --git a/Android.bp b/Android.bp
+index c7150c6..6e61e89 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -58,0 +59 @@ cc_library_static {
++    recovery_available: true,
+@@ -81,0 +83 @@ cc_library_static {
++    recovery_available: true,
+@@ -140,0 +143,6 @@ cc_test {
++
++filegroup {
++    name: "hwservicemanager_recovery_main",
++    srcs: ["service.cpp"],
++    visibility: ["//bootable/recovery/etc"],
++}
+diff --git a/Vintf.cpp b/Vintf.cpp
+index b4f9f2e..7ce460a 100644
+--- a/Vintf.cpp
++++ b/Vintf.cpp
+@@ -24,0 +25,3 @@
++#ifdef __ANDROID_RECOVERY__
++#include <vintf/VintfObjectRecovery.h>
++#endif
+@@ -58,0 +62,4 @@ vintf::Transport getTransport(const std::string &interfaceName, const std::strin
++#ifdef __ANDROID_RECOVERY__
++    return getTransportFromManifest(fqName, instanceName,
++            vintf::VintfObjectRecovery::GetInstance()->getRecoveryHalManifest());
++#else
+@@ -72,0 +80 @@ vintf::Transport getTransport(const std::string &interfaceName, const std::strin
++#endif
+@@ -100,0 +109,4 @@ std::set<std::string> getInstances(const std::string& interfaceName) {
++#ifdef __ANDROID_RECOVERY__
++    insertManifestInstances(fqName,
++        vintf::VintfObjectRecovery::GetInstance()->getRecoveryHalManifest(), "recovery", &ret);
++#else
+@@ -104,0 +117 @@ std::set<std::string> getInstances(const std::string& interfaceName) {
++#endif

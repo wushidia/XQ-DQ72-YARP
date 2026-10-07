@@ -1,0 +1,10 @@
+# Start independently of recovery/GUI and without shell/linker dependencies.
+on early-init
+    start yarp-bootlog
+
+service yarp-bootlog /system/bin/yarp_bootlog
+    disabled
+    user root
+    group root log
+    seclabel u:r:recovery:s0
+    priority 10

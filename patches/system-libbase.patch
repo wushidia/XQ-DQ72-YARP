@@ -1,0 +1,11 @@
+diff --git a/strings.cpp b/strings.cpp
+index a776d22..49b74b1 100644
+--- a/strings.cpp
++++ b/strings.cpp
+@@ -71,0 +72,6 @@ std::vector<std::string> Tokenize(const std::string& s, const std::string& delim
++// ABI compatibility for Sony/Qualcomm vendor executables built before Trim
++// became a forwarding-reference template. Keep the template ABI as well.
++std::string Trim(const std::string& value) {
++  return Trim<const std::string&>(value);
++}
++

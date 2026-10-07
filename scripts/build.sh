@@ -2,7 +2,7 @@
 set -eo pipefail
 exec > >(tee "$ARTIFACT_DIR/build.log") 2>&1
 rm -f "$ARTIFACT_DIR/build-success"
-case "$BUILD_JOBS" in 1|2|3|4) ;; *) echo "Invalid BUILD_JOBS"; exit 1 ;; esac
+case "$BUILD_JOBS" in 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16) ;; *) echo "Invalid BUILD_JOBS"; exit 1 ;; esac
 cd "$BUILD_DIR"
 report_resources() {
   status=$?
@@ -17,12 +17,14 @@ export ALLOW_MISSING_DEPENDENCIES=true
 export LC_ALL=C
 # Use the hosted runner memory budget for Soong while retaining swap as a safety buffer.
 # These remain overridable for a larger self-hosted runner.
-export GOMAXPROCS="${GOMAXPROCS:-4}"
+export GOMAXPROCS="${GOMAXPROCS:-2}"
 export GOGC="${GOGC:-50}"
-export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-12GiB}"
-export GOMEMLIMIT="${GOMEMLIMIT:-12GiB}"
+export SOONG_GOMEMLIMIT="${SOONG_GOMEMLIMIT:-6GiB}"
+export GOMEMLIMIT="${GOMEMLIMIT:-6GiB}"
 echo "Soong Go settings: GOMAXPROCS=$GOMAXPROCS GOGC=$GOGC SOONG_GOMEMLIMIT=$SOONG_GOMEMLIMIT"
 python3 "$GITHUB_WORKSPACE/scripts/safe-build.py"
+python3 "$GITHUB_WORKSPACE/scripts/finalize-ramdisk.py"
+"$BUILD_DIR/prebuilts/build-tools/linux-x86/bin/ninja" -f "$BUILD_DIR/out/combined-twrp_pdx234.ninja" recoveryimage
 image="$BUILD_DIR/out/target/product/pdx234/recovery.img"
 test -s "$image"
 cp "$image" "$ARTIFACT_DIR/recovery.img"
